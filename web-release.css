@@ -1,0 +1,16 @@
+
+.generation-card {display:none}
+.back-home {position:fixed;bottom:8px;left:12px;z-index:150;color:#3b5b44;background:#fff9f0;padding:6px 10px;border-radius:4px;font-size:12px;text-decoration:none}
+@media(max-width:800px){
+ html,body{min-width:0;min-height:0;height:auto;overflow:auto}
+ .app-shell{height:auto;min-height:100dvh;display:block}
+ .topbar{min-height:80px;padding:12px;gap:10px;flex-wrap:wrap}
+ .topbar-actions{flex-wrap:wrap;gap:5px}.status-pill{font-size:10px}
+ .workspace{display:flex;flex-direction:column}
+ .stage-panel{order:0;height:65dvh;min-height:390px;grid-template-rows:auto 1fr 31px}
+ .stage-toolbar{height:auto;padding:8px;gap:6px;flex-wrap:wrap}.stage-actions{flex-wrap:wrap}
+ .sidebar{max-height:none;overflow:visible;padding:18px}.materials-panel{order:1}.inspector-panel{order:2}
+ .viewport{touch-action:none}.material-list{max-height:200px;overflow:auto}
+ .app-shell.ui-hidden{height:100dvh}.app-shell.ui-hidden .stage-panel{height:100dvh}
+ .back-home{position:static;display:block;border-radius:0;padding:10px 14px}
+}

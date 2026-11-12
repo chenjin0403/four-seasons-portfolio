@@ -1,0 +1,11 @@
+MediaPipe Hand Landmarker (float16), 21 landmarks per hand.
+Runtime: @mediapipe/tasks-vision 0.10.18, obtained from jsDelivr npm CDN.
+Official model URL (unreachable during packaging):
+https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task
+Model mirror used:
+https://raw.githubusercontent.com/IoT-gamer/hand_landmarker/main/android/src/main/assets/hand_landmarker.task
+Git blob SHA-1 verified: 0d53faf3786146e95c5bc010c48029ff16b7fa59
+SHA-256: fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1
+Size: 7819105 bytes.
+MediaPipe project licensing: Apache-2.0, see LICENSE.txt.
+Camera frames are processed locally. No cloud inference, uploads or recordings.

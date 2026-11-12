@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#e8e2d7" />
+    <title>四时花开 · 立体水墨编辑器</title>
+    <link rel="stylesheet" href="./styles.css?v=shishi-17" />
+  <link rel="stylesheet" href="./web-release.css" /></head>
+  <body><a class="back-home" href="./">← 作品介绍</a>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand" aria-label="四时花开 立体水墨编辑器">
+          <span class="brand-seal">花</span>
+          <div>
+            <h1>四时花开</h1>
+            <p>立体水墨 · 网页交互作品</p>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span id="render-status" class="status-pill is-loading">正在准备渲染器</span>
+          <button id="fit-scene" class="button button-quiet" type="button">适配画面</button>
+          <button id="export-png" class="button button-primary" type="button">导出 PNG</button>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <aside class="sidebar materials-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">MATERIALS</p>
+              <h2>水墨素材</h2>
+            </div>
+            <span id="material-count" class="count">0</span>
+          </div>
+
+          <label class="import-zone" for="file-input">
+            <input id="file-input" type="file" accept=".splat,.ply,.spz,.ksplat" multiple />
+            <span class="import-icon">＋</span>
+            <strong>导入高斯泼溅素材</strong>
+            <small>支持 .splat / .ply / .spz</small>
+          </label>
+
+          <section class="generation-card" aria-label="一键生成 3D 国画">
+            <div class="generation-title">
+              <span class="spark">✦</span>
+              <div><b>一键生成 3D 国画</b><small>由本机 TripoSplat 驱动</small></div>
+            </div>
+            <label class="artwork-picker" for="image-input">
+              <input id="image-input" type="file" accept="image/png,image/jpeg,image/webp" />
+              <img id="artwork-preview" alt="待生成的国画预览" hidden />
+              <span id="artwork-placeholder">上传一幅国画或花鸟素材</span>
+            </label>
+            <button id="generate-ink" class="button button-generate full-width" type="button">生成可编辑 3D 素材</button>
+            <p id="generation-status">启动 server.py 后可直接调用本机 ComfyUI</p>
+          </section>
+
+          <div class="material-toolbar">
+            <button id="open-project" class="text-button" type="button">打开项目</button>
+            <input id="project-input" type="file" accept=".json,application/json" hidden />
+            <button id="add-sample" class="text-button" type="button">添加一幅成品</button>
+            <button id="add-all-samples" class="text-button" type="button">载入四幅成品</button>
+            <button id="select-all" class="text-button" type="button">全部选中</button>
+            <button id="clear-scene" class="text-button danger" type="button">清空画面</button>
+          </div>
+          <ul id="material-list" class="material-list" aria-label="已导入素材"></ul>
+          <p id="selection-summary" class="appearance-tip" aria-live="polite">已选 0 幅</p>
+
+          <div class="sidebar-tip">
+            <span>创作提示</span>
+            <p>在左侧选中一幅，再拖动、旋转或缩放。三个工具始终编辑这一幅，滚轮和＋／－也只缩放这一幅。编辑时相机锁定；需要改变整体观看角度时，点击「调整整体视角」。</p>
+          </div>
+        </aside>
+
+        <section class="stage-panel" aria-label="三维编辑视口">
+          <div class="stage-toolbar">
+            <div class="tool-group" aria-label="变换工具">
+              <button class="tool-button is-active" data-transform="move" type="button" title="移动 (G)">移动</button>
+              <button class="tool-button" data-transform="rotate" type="button" title="旋转 (R)">旋转</button>
+              <button class="tool-button" data-transform="scale" type="button" title="缩放 (S)">缩放</button>
+            </div>
+            <div class="tool-group stage-actions">
+              <button id="camera-mode" class="tool-button" type="button" aria-pressed="false">调整整体视角</button>
+              <button id="view-front" class="tool-button" type="button">正视</button>
+              <button id="view-side" class="tool-button" type="button">侧视</button>
+              <button id="toggle-grid" class="tool-button is-active" type="button">网格</button>
+              <button id="hide-ui" class="tool-button" type="button">隐藏界面</button>
+              <button id="fullscreen" class="tool-button" type="button">全屏</button>
+            </div>
+          </div>
+
+          <div id="viewport" class="viewport" tabindex="0" aria-label="3D Gaussian Splat 视口">
+            <div id="presentation-controls" class="presentation-controls" hidden>
+              <button id="exit-presentation" type="button">返回编辑（Esc）</button>
+            </div>
+            <div id="empty-state" class="empty-state">
+              <span class="ink-disc">山</span>
+              <h2>在一方留白中开始创作</h2>
+              <p>导入 .splat、.ply 或 .spz 文件，组合你的水墨素材。</p>
+              <button id="empty-import" class="button button-primary" type="button">导入素材</button>
+            </div>
+            <div class="viewport-label label-top-left">PERSPECTIVE</div>
+            <div id="transform-hint" class="viewport-label label-bottom-left">分层水墨 v9 · 相机已锁定</div>
+            <div id="transform-gizmo" class="transform-gizmo" hidden>
+              <span class="gizmo-axis gizmo-x"><i></i><b>X</b></span>
+              <span class="gizmo-axis gizmo-y"><i></i><b>Y</b></span>
+              <span class="gizmo-axis gizmo-z"><i></i><b>Z</b></span>
+              <button class="gizmo-core selection-handle" type="button" title="拖动编辑当前作品" aria-label="拖动编辑当前作品"></button>
+            </div>
+            <div class="compass" aria-hidden="true"><i></i><b>北</b></div>
+          </div>
+
+          <footer class="stage-footer">
+            <span id="scene-summary">未放置素材</span>
+            <span>左侧选择作品 · G 移动 / R 旋转 / S 缩放 · 滚轮 / ＋／－ 仅缩放选中作品</span>
+          </footer>
+        </section>
+
+        <aside class="sidebar inspector-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">INSPECTOR</p>
+              <h2>素材属性</h2>
+            </div>
+          </div>
+          <div id="empty-inspector" class="empty-inspector">选择左侧的素材以调整位置、旋转和比例。</div>
+          <form id="inspector-form" class="inspector-form" hidden>
+            <div class="selection-name">
+              <span class="selection-dot"></span>
+              <output id="selected-name"></output>
+              <button id="remove-selected" class="icon-button" type="button" title="移除选中素材">×</button>
+            </div>
+
+            <fieldset class="editor-mode">
+              <legend>EDIT MODE</legend>
+              <label class="check-row"><input id="mode-2d" type="checkbox" /> 2.5D 模式 <small>锁定 Z 轴移动</small></label>
+              <label class="check-row"><input id="uniform-scale" type="checkbox" checked /> 统一缩放</label>
+              <div class="mode-controls">
+                <button class="tool-button is-active" data-transform="move" type="button">Move</button>
+                <button class="tool-button" data-transform="rotate" type="button">Rotate</button>
+                <button class="tool-button" data-transform="scale" type="button">Scale</button>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>位置 Position</legend>
+              <div class="three-fields">
+                <label>X<input data-bind="position.x" type="number" step="0.01" /></label>
+                <label>Y<input data-bind="position.y" type="number" step="0.01" /></label>
+                <label>Z<input data-bind="position.z" type="number" step="0.01" /></label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>旋转 Rotation</legend>
+              <div class="three-fields">
+                <label>X<input data-bind="rotation.x" type="number" step="1" /></label>
+                <label>Y<input data-bind="rotation.y" type="number" step="1" /></label>
+                <label>Z<input data-bind="rotation.z" type="number" step="1" /></label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>缩放 Scale</legend>
+              <div class="scale-control">
+                <input id="scale-range" data-bind="scale" type="range" min="0.1" max="3" step="0.01" />
+                <input id="scale-number" data-bind="scale" type="number" min="0.1" max="10" step="0.01" />
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>呈现 Appearance</legend>
+              <div class="ink-presets">
+                <button type="button" data-ink-preset="original">原始</button>
+                <button type="button" data-ink-preset="soft">柔墨晕染</button>
+                <button type="button" data-ink-preset="dry">疏淡飞白</button>
+              </div>
+              <label class="range-label">不透明度 <output id="opacity-value">100%</output>
+                <input id="opacity-range" data-bind="opacity" type="range" min="0.1" max="1" step="0.01" />
+              </label>
+              <label class="range-label">点云密度 <output id="density-value">100%</output>
+                <input id="density-range" data-bind="density" type="range" min="0.2" max="1" step="0.05" />
+              </label>
+              <label class="range-label">晕染半径 <output id="softness-value">1.00×</output>
+                <input data-bind="softness" type="range" min="0.8" max="1.5" step="0.01" />
+              </label>
+              <label class="range-label">设色浓淡 <output id="saturation-value">100%</output>
+                <input data-bind="saturation" type="range" min="0" max="1.2" step="0.01" />
+              </label>
+              <p class="appearance-tip">仅作用于当前图层；晕染调整高斯斑点，不改变模型尺寸。右键画作或列表可修改图层。</p>
+            </fieldset>
+            <div class="correction-actions">
+              <button id="flip-facing" class="button button-quiet" type="button">翻转正反面</button>
+              <button id="mirror-selected" class="button button-quiet" type="button">左右镜像</button>
+            </div>
+            <div class="object-actions">
+              <button id="duplicate-selected" class="button button-quiet" type="button">复制对象</button>
+              <button id="save-composition" class="button button-quiet" type="button">保存项目（含模型）</button>
+            </div>
+            <button id="reset-selected" class="button button-quiet full-width" type="button">重置当前素材</button>
+          </form>
+
+          <div class="canvas-settings">
+            <p class="eyebrow">CANVAS</p>
+            <label>宣纸预设
+              <select id="paper-preset">
+                <option value="rice">米白宣纸</option>
+                <option value="warm">暖棕旧纸</option>
+                <option value="mist">青灰雾纸</option>
+                <option value="night">夜墨黑底</option>
+              </select>
+            </label>
+            <label>画布底色
+              <input id="background-color" type="color" value="#e8e2d7" />
+            </label>
+            <label>导出尺寸
+              <select id="export-size">
+                <option value="1920x1080">1920 × 1080</option>
+                <option value="2048x2048">2048 × 2048</option>
+                <option value="3840x2160">3840 × 2160</option>
+              </select>
+            </label>
+          </div>
+          <section class="gesture-settings" aria-label="摄像头手势花开">
+            <p class="eyebrow">GESTURE BLOOM · 21 点手势</p>
+            <button id="hand-enable" class="button button-primary full-width" type="button">开启摄像头手势</button>
+            <div class="hand-preview">
+              <video id="hand-video" autoplay playsinline muted></video>
+              <canvas id="hand-landmarks" width="320" height="240" aria-label="21 个手部关键点"></canvas>
+            </div>
+            <progress id="hand-progress" max="1" value="0" aria-label="张掌或比耶稳定保持进度"></progress>
+            <p id="hand-status" role="status">摄像头未开启 · 图像仅在本机处理，不录制、不上传</p>
+            <p class="appearance-tip">张掌稳定 0.3 秒：花瓣飞出。仅伸食指：沿指尖绘花。食指＋中指张开比耶，其余手指收起，保持 0.4 秒：清空绘花，原画保留。握拳：停止生成，绘花保留。多人、遮挡或低光会暂停识别。</p>
+            <button id="flower-mouse" class="button button-quiet full-width" type="button" aria-pressed="false">鼠标试画</button>
+            <div class="gesture-actions">
+              <button id="flower-undo" class="button button-quiet" type="button" disabled>撤销上一笔</button>
+              <button id="flower-clear" class="button button-quiet" type="button" disabled>清空绘花</button>
+            </div>
+            <p id="flower-count" role="status">0 / 96 朵</p>
+            <p class="appearance-tip">古绢低饱和立体花 · 大小随机错落 · 70% 透明（整层不透明度 30%）。绘花固定在画布上层，随项目保存、随 PNG 导出。</p>
+            <div class="gesture-actions">
+              <button id="bloom-preview" class="button button-quiet" type="button">鼠标预览花开</button>
+              <button id="bloom-stop" class="button button-quiet" type="button" disabled>停止花开</button>
+            </div>
+            <button id="bloom-origin" class="button button-quiet full-width" type="button">点选花朵起点</button>
+            <label class="check-row"><input id="bloom-sound" type="checkbox" checked /> 合成古筝、沙沙声 ＋ 轻柔玉珠音</label>
+            <label class="range-label">音量 <input id="bloom-volume" type="range" min="0" max="0.35" step="0.01" value="0.18" /></label>
+          </section>
+          <div class="effect-settings">
+            <p class="eyebrow">INK EFFECTS</p>
+            <label class="check-row"><input id="dissolve-enabled" type="checkbox" /> 选中图层 · 循环浓淡飞白</label>
+            <label class="check-row"><input id="reveal-sync-rotate" type="checkbox" /> 播放时同步自动旋转</label>
+            <p class="appearance-tip">先全部选中，或 Ctrl＋点击多选。多选决定动画范围；变换仍只修改当前图层。同步旋转是整体视角环绕，结束后恢复原开关状态。</p>
+            <label class="range-label">溶解强度 <output id="dissolve-strength-value">35%</output>
+              <input id="dissolve-strength" type="range" min="0.05" max="0.8" value="0.35" step="0.05" />
+            </label>
+            <label class="range-label">呼吸速度 <output id="dissolve-speed-value">1.0×</output>
+              <input id="dissolve-speed" type="range" min="0.2" max="2" value="1" step="0.1" />
+            </label>
+            <label class="range-label">飞白 / 稀疏 <output id="dissolve-density-value">35%</output>
+              <input id="dissolve-density" type="range" min="0" max="0.75" value="0.35" step="0.05" />
+            </label>
+            <button id="play-reveal" class="button button-quiet full-width" type="button">播放水墨显现动画</button>
+            <button id="stop-reveal" class="button button-quiet full-width" type="button" disabled>停止动画与同步旋转</button>
+          </div>
+          <div class="view-settings">
+            <p class="eyebrow">VIEW</p>
+            <label class="check-row"><input id="auto-rotate" type="checkbox" /> 自动旋转</label>
+            <label class="range-label">旋转速度 <output id="rotate-speed-value">0.6×</output>
+              <input id="rotate-speed" type="range" min="0.1" max="2" value="0.6" step="0.1" />
+            </label>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <template id="material-template">
+      <li class="material-item">
+        <button class="material-select" type="button">
+          <span class="material-thumb"><i></i></span>
+          <span class="material-copy"><strong></strong><small></small></span>
+        </button>
+        <button class="material-remove" type="button" title="移除素材">×</button>
+        <button class="material-visibility" type="button" title="隐藏或显示素材">◉</button>
+        <button class="material-lock" type="button" title="锁定或解锁素材">⌑</button>
+      </li>
+    </template>
+    <div id="toast-region" class="toast-region" aria-live="polite"></div>
+    <form id="layer-menu" class="layer-menu" role="dialog" aria-label="修改图层" hidden>
+      <label for="layer-name">修改当前图层</label>
+      <div class="layer-rename"><input id="layer-name" maxlength="80" aria-label="图层名称" /><button type="submit">改名</button></div>
+      <div class="layer-tools"><button type="button" data-layer-tool="move">移动</button><button type="button" data-layer-tool="rotate">旋转</button><button type="button" data-layer-tool="scale">缩放</button></div>
+      <button type="button" data-layer-action="visibility">隐藏图层</button>
+      <button type="button" data-layer-action="lock">锁定图层</button>
+      <button type="button" data-layer-action="duplicate">复制图层</button>
+      <button type="button" data-layer-action="remove" class="danger">删除图层</button>
+    </form>
+    <script type="module" src="./app.js?v=shishi-17"></script>
+  </body>
+</html>
